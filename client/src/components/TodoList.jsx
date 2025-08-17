@@ -5,11 +5,7 @@ function TodoList({ todos, toggleTodo, deleteTodo }) {
     .catch(err => console.log(err));
 };
 
-const deleteTodo = (id) => {
-  axios.delete(`http://localhost:5000/todos/${id}`)
-    .then(() => setTodos(prev => prev.filter(t => t._id !== id)))
-    .catch(err => console.log(err));
-};
+
 
 
 return (
