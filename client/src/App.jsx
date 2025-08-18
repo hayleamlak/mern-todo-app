@@ -1,67 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Todolist from "./components/TodoList";
- // your existing todo item component
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function App() {
-  // Existing states
   const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState('');
+  const [text, setText] = useState("");
 
-  // New filter state
-  const [filter, setFilter] = useState('all'); // <- add this
-
-  // Fetch todos from backend
+  // ✅ Load todos from backend
   useEffect(() => {
-    axios.get('http://localhost:5000/todos')
+    axios.get("http://localhost:5000/todos")
       .then(res => setTodos(res.data))
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
   }, []);
 
-  // Add todo function
+  // ✅ Add todo
   const addTodo = () => {
-    if (!newTodo) return;
-    axios.post('http://localhost:5000/todos', { title: newTodo, completed: false })
+    if (!text.trim()) return;
+    axios.post("http://localhost:5000/todos", { text })
       .then(res => setTodos([...todos, res.data]))
-      .catch(err => console.log(err));
-    setNewTodo('');
+      .catch(err => console.error(err));
+    setText("");
   };
 
-  // Filter todos based on filter state
-  const filteredTodos = todos.filter(todo => {
-    if (filter === 'all') return true;
-    if (filter === 'completed') return todo.completed;
-    if (filter === 'pending') return !todo.completed;
-    return true;
-  });
+  // ✅ Toggle todo
+  const toggleTodo = (id, completed) => {
+    axios.put(`http://localhost:5000/todos/${id}`, { completed: !completed })
+      .then(res => {
+        setTodos(todos.map(t => (t._id === id ? res.data : t)));
+      })
+      .catch(err => console.error(err));
+  };
+
+  // ✅ Delete todo
+  const deleteTodo = (id) => {
+    axios.delete(`http://localhost:5000/todos/${id}`)
+      .then(() => setTodos(todos.filter(t => t._id !== id)))
+      .catch(err => console.error(err));
+  };
 
   return (
-    <div className="App">
-      <h1>My Todo App</h1>
-
-      {/* Input to add new todo */}
+    <div style={{ padding: "20px" }}>
+      <h1>✅ MERN Todo</h1>
       <input
-        type="text"
-        value={newTodo}
-        onChange={(e) => setNewTodo(e.target.value)}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Add a todo"
       />
       <button onClick={addTodo}>Add</button>
 
-      {/* Filter buttons */}
-      <div className="filters">
-        <button onClick={() => setFilter('all')}>All</button>
-        <button onClick={() => setFilter('completed')}>Completed</button>
-        <button onClick={() => setFilter('pending')}>Pending</button>
-      </div>
-
-      {/* Render filtered todos */}
       <ul>
-        {filteredTodos.map(todo => (
-          <TodoItem
-            key={todo._id}
-            todo={todo}
-            setTodos={setTodos} // for updating or deleting inside TodoItem
-          />
+        {todos.map(todo => (
+          <li key={todo._id}>
+            <span
+              style={{
+                textDecoration: todo.completed ? "line-through" : "none",
+                cursor: "pointer",
+              }}
+              onClick={() => toggleTodo(todo._id, todo.completed)}
+            >
+              {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo._id)}>❌</button>
+          </li>
         ))}
       </ul>
     </div>
